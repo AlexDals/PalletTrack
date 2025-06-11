@@ -4,14 +4,31 @@ import streamlit as st
 from google.cloud import vision
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
 
 # ------------------ CONFIG ------------------
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials/vision-service-account.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-CREDS = ServiceAccountCredentials.from_json_keyfile_name(
-    'credentials/sheets-service-account.json', SCOPES)
-GSPREAD_CLIENT = gspread.authorize(CREDS)
+
+if 'vision_service_account' in st.secrets:
+    vision_creds = service_account.Credentials.from_service_account_info(
+        st.secrets['vision_service_account']
+    )
+else:
+    vision_creds = service_account.Credentials.from_service_account_file(
+        'credentials/vision-service-account.json'
+    )
+
+vision_client = vision.ImageAnnotatorClient(credentials=vision_creds)
+
+if 'sheets_service_account' in st.secrets:
+    gspread_client = gspread.service_account_from_dict(
+        st.secrets['sheets_service_account'], scopes=SCOPES
+    )
+else:
+    gspread_client = gspread.service_account(
+        filename='credentials/sheets-service-account.json', scopes=SCOPES
+    )
+
 SPREADSHEET_ID = st.secrets['sheet_id']
 SHEET_NAME = 'Inventory'
 PRODUCT_COL = 'ProductCode'
@@ -19,16 +36,15 @@ LOCATION_COL = 'Location'
 
 # ------------------ FUNCTIONS ------------------
 def extract_pairs_from_image(image_bytes):
-    client = vision.ImageAnnotatorClient()
     image = vision.Image(content=image_bytes)
-    response = client.document_text_detection(image=image)
+    response = vision_client.document_text_detection(image=image)
     text = response.full_text_annotation.text
     pattern = re.compile(r"([A-Z0-9]+)\s+([A-Z0-9-]+)")
     return [(c.strip(), l.strip()) for c, l in pattern.findall(text)]
 
 
 def load_sheet():
-    sheet = GSPREAD_CLIENT.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
+    sheet = gspread_client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
     df = pd.DataFrame(sheet.get_all_records())
     df.set_index(PRODUCT_COL, inplace=True, drop=False)
     return sheet, df

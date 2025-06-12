@@ -15,8 +15,10 @@ SERVICE_ACCOUNT_PATH = 'credentials/service-account.json'
 
 if 'gcp_service_account' in st.secrets:
     os.makedirs('credentials', exist_ok=True)
+    # st.secrets returns a special mapping type that isn't JSON serializable
+    # directly, so convert it to a plain dict before dumping.
     with open(SERVICE_ACCOUNT_PATH, 'w') as f:
-        json.dump(st.secrets['gcp_service_account'], f)
+        json.dump(dict(st.secrets['gcp_service_account']), f)
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SERVICE_ACCOUNT_PATH
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']

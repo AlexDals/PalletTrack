@@ -15,8 +15,16 @@ SERVICE_ACCOUNT_PATH = 'credentials/service-account.json'
 
 if 'gcp_service_account' in st.secrets:
     os.makedirs('credentials', exist_ok=True)
+    # st.secrets can return objects that aren't plain dictionaries. Convert
+    # them to a regular dict before dumping so ``json.dump`` doesn't fail.
+    creds = st.secrets['gcp_service_account']
+    if not isinstance(creds, dict):
+        try:
+            creds = dict(creds)
+        except Exception:
+            creds = json.loads(str(creds))
     with open(SERVICE_ACCOUNT_PATH, 'w') as f:
-        json.dump(st.secrets['gcp_service_account'], f)
+        json.dump(creds, f)
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SERVICE_ACCOUNT_PATH
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']

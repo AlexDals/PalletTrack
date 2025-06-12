@@ -33,3 +33,10 @@ python update_inventory.py
 ```
 
 Each location cell updated by the script receives the note `Made by AI`.
+
+## Cloud Vision Prompt
+
+The prompt used when processing images with GPT-4 Vision is stored in
+`cloud_vision_prompt.txt`. It explains how to interpret the spreadsheet,
+handle handwritten text, validate product codes using the
+`validateProductCodeTool`, and return the extracted data as a JSON array.

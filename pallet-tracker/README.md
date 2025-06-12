@@ -4,7 +4,10 @@ A Streamlit app that extracts product codes and locations from scanned documents
 
 ## Setup
 1. Clone the repo.
-2. Place your service-account JSON files in `credentials/`.
+2. Place your service-account JSON file in `credentials/service-account.json`.
+   The same credentials are used for both Vision and Sheets. When deploying
+   to Streamlit Cloud, you can instead store the values in `secrets.toml`
+   under the `[gcp_service_account]` table.
 3. Create `.streamlit/credentials.toml`:
    ```toml
    [general]

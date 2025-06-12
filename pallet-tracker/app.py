@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import streamlit as st
 from google.cloud import vision
 import pandas as pd
@@ -7,10 +8,20 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 # ------------------ CONFIG ------------------
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials/vision-service-account.json'
+# Use a single service account JSON for both Vision and Sheets APIs. The file
+# may be provided directly in the credentials folder or via `st.secrets` under
+# the `gcp_service_account` table when running on Streamlit Cloud.
+SERVICE_ACCOUNT_PATH = 'credentials/service-account.json'
+
+if 'gcp_service_account' in st.secrets:
+    os.makedirs('credentials', exist_ok=True)
+    with open(SERVICE_ACCOUNT_PATH, 'w') as f:
+        json.dump(st.secrets['gcp_service_account'], f)
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SERVICE_ACCOUNT_PATH
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 CREDS = ServiceAccountCredentials.from_json_keyfile_name(
-    'credentials/sheets-service-account.json', SCOPES)
+    SERVICE_ACCOUNT_PATH, SCOPES)
 GSPREAD_CLIENT = gspread.authorize(CREDS)
 SPREADSHEET_ID = st.secrets['sheet_id']
 SHEET_NAME = 'Inventory'

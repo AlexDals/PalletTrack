@@ -23,3 +23,13 @@ A Streamlit app that extracts product codes and locations from scanned documents
    docker build -t pallet-tracker .
    docker run -p 8501:8501 pallet-tracker
    ```
+
+## Automated Inventory Update
+
+The `update_inventory.py` script processes `Xerox Scan.pdf` using Google Cloud Vision, matches entries between the "DE" and "A" tables, and updates the `Inventory` Google Sheet. The sheet ID must be provided via the `SHEET_ID` environment variable.
+
+```bash
+python update_inventory.py
+```
+
+Each location cell updated by the script receives the note `Made by AI`.
